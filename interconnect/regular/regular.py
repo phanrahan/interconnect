@@ -1,10 +1,32 @@
-from .. import Core, Tile, Switch, Interconnect, is_connectable, is_connected, connect
+from .. import Switch, Interconnect, is_connectable, is_connected, connect
 
 class Regular(Interconnect):
-    def __init__(self, core, num_inputs, num_outputs, nx, ny):
+    def __init__(self, num_inputs, num_outputs, nx, ny):
         # generate nx, ny tiles and cores
-        super().__init__(core, num_inputs, num_outputs, nx, ny)
-        self.create_connections(nx, ny, num_inputs, num_outputs)
+        super().__init__(num_inputs, num_outputs, nx, ny)
+        #self.create_connections(nx, ny, num_inputs, num_outputs)
+
+    def is_connectable(self, 
+        tile0 : (int, int), track0: int, 
+        tile1 : (int, int), track1: int) -> bool:
+
+        if not self.inside(*tile0):
+            raise ValueError(f"Invalid tile {tile0}")
+        if not self.inside(*tile1):
+            raise ValueError(f"Invalid tile {tile1}")
+        if not self.tile(*tile0).inside(track0):
+            raise ValueError(f"Invalid switch node track {(tile0, track0)}")
+        if not self.tile(*tile1).inside(track1):
+            raise ValueError(f"Invalid switch node track {(tile1, track1)}")
+
+        if abs(tile0[0] - tile1[0]) > 1:
+            return False
+
+        if abs(tile0[1] - tile1[1]) > 1:
+            return False
+
+        return track0 == track1
+
 
     def create_connections(self, nx, ny, nz, num_outputs):
         # connect each output to the inputs of its neighbors
@@ -32,21 +54,12 @@ class Regular(Interconnect):
                         switch_input += 1
                         #print(len(list(self.get_output(xp,yp,0).connections())))
 
-    def is_connectable(self, x0: int, y0: int, z0: int, 
-                             x1: int, y1: int, z1: int) -> bool:
-        switch_output = self.get_input(x0,y0,z0).get_connection()
-        for switch_input in self.get_output(x1,y1,z1).connections():
-            if is_connectable(switch_input, switch_output):
-                return True
-            #if switch.is_connectable(output, input):
-            #    return True
-        return False
+    def connect(self, 
+        tile0 : (int, int), track0: int, 
+        tile1 : (int, int), track1: int) -> bool:
+        pass
 
     def is_connected(self,
-                     x0: int,
-                     y0: int,
-                     output : int,
-                     x1: int,
-                     y1: int,
-                     input : int) -> bool:
+        tile0 : (int, int), track0: int, 
+        tile1 : (int, int), track1: int) -> bool:
         pass
